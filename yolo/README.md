@@ -2,9 +2,10 @@
 
 ## Data preparation
 The labels have to be in Yolo format and paths to dataset has to be prepared the same way as this example *.yaml* file.
+Data has to be split into images and labels folders each containing train, val, test subfolders.
 ### YAML file structure
 - *path* is the main path to dataset
-- *train, val, test* is the paths to coresponding oarts of dataset
+- *train, val, test* is the paths to coresponding parts of dataset
 - *nc* is the number of calsses dataset has
 - *names* is to give name to the number representing specific class in label files
 
