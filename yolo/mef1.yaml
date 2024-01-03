@@ -1,0 +1,9 @@
+path: '/Users/sapplab/Desktop/CellDataProcessing'
+train: 'MEF1/MEF1_split/images/train'
+val: 'MEF1/MEF1_split/images/val'
+test: 'MEF1/MEF1_split/images/test'
+
+nc: 1
+
+names:
+  0: 'cell_n'
