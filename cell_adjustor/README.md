@@ -18,6 +18,10 @@ Augumentations are only a change in brightness and contrast. We augument images,
 `split_dataset.ipynb`   
 Split augumented files into train, val, test parts.
 
-## Labels formats
+## Labels formats etc.
 `yolo_to_xml.py` and `xml_to_tfrecord.py`   
-Theese files change the format of labels to needed formats (xml, tfrecord).   
+Theese files change the format of labels to needed formats (xml, tfrecord).
+Specific params and paths might have to be adjusted depending on the dataset.
+   
+`change_yolo_class_num.py`   
+Script to change yolo class numbers in label files.   

@@ -11,6 +11,8 @@ from matplotlib.widgets import Slider, Button, TextBox, RadioButtons
 from config import *
 from CellProcessor import read_image, process_image, draw_contours
 
+GREEN_PATH = CROP_GREEN_PATH
+PHASE_PATH = CROP_PHASE_PATH
 
 # Read image and initial process
 curr_image_num = 0
@@ -203,6 +205,7 @@ button_save.on_clicked(save)
 # rand image pick
 def rand_pick(event, len_images):
     global curr_image_num
+    global img, img_base
     curr_image_num = random.randint(0, len_images-1)
     green_image_path = GREEN_PATH + images[curr_image_num]
     base_image_path = PHASE_PATH + images[curr_image_num]

@@ -22,8 +22,8 @@ def get_bboxes(img_dilation, dims=False):
         xw = x_max - x_min
         yh = y_max - y_min
         box_width = max([xw, yh])
-        x_padding = box_width*0.55
-        y_padding = box_width*0.55
+        x_padding = box_width*0.45
+        y_padding = box_width*0.45
 
         xp_min = int(x_min - x_padding)
         xp_max = int(x_min + box_width + x_padding)
