@@ -5,7 +5,7 @@ import tensorflow as tf
 
 def get_bboxes(img_dilation, dims=False):
     # blur
-    img_blur = cv2.GaussianBlur(img_dilation, (5, 5), 0)
+    img_blur = cv2.GaussianBlur(img_dilation, (3, 3), 0)
 
     # get contours and calc center
     cnts = cv2.findContours(img_blur.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
