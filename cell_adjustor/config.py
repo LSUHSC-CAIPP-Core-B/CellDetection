@@ -2,13 +2,13 @@
 # Preprocessing values params
 # 0 - initial params
 # 1 - HT29 cells from 01/08 fine tuning
-PREPROCESS_VALS = 0
+PREPROCESS_VALS = 1
 # Datasets
 # 3 - Necroptosis HT29
 # 4 - Necroptosis MEF
 # 5 - Apoptosis HT29
 # 6 - Apoptosis MEF
-DATASET = 4
+DATASET = 3
 
 # INITIAL VARS
 if PREPROCESS_VALS == 0:
