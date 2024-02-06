@@ -2,13 +2,19 @@
 # Preprocessing values params
 # 0 - initial params
 # 1 - HT29 cells from 01/08 fine tuning
-PREPROCESS_VALS = 1
+# 2 - MEF Apoptosis pt2 cells from 02/01 fine tuning
+# 3 - HT29 Necroptosis/Apoptosis pt2 02/01 - 02/02 fine tuning
+PREPROCESS_VALS = 0
 # Datasets
 # 3 - Necroptosis HT29
 # 4 - Necroptosis MEF
 # 5 - Apoptosis HT29
 # 6 - Apoptosis MEF
-DATASET = 3
+# 7 - Necroptosis HT29 pt2
+# 8 - Necroptosis MEF pt2
+# 9 - Apoptosis HT29 pt2
+# 10 - Apoptosis MEF pt2
+DATASET = 8
 
 # INITIAL VARS
 if PREPROCESS_VALS == 0:
@@ -30,45 +36,72 @@ elif PREPROCESS_VALS == 1:
     # erode and dialate to erase noise
     i_erode = 2
     i_dialate = 3
+elif PREPROCESS_VALS == 2:
+    #A MEF pt2 - 02/01
+    # contrast and brightness
+    brightness = -9.4
+    contrast = 7.4
+    # thresh to get all the stained cells
+    threshold = 42
+    # erode and dialate to erase noise
+    i_erode = 2
+    i_dialate = 3
+elif PREPROCESS_VALS == 3:
+    #N/A HT29 pt2 - 02/02
+    # contrast and brightness
+    brightness = -18.2 #-9.26
+    contrast = 12.0
+    # thresh to get all the stained cells
+    threshold = 42
+    # erode and dialate to erase noise
+    i_erode = 2
+    i_dialate = 3
 
 # PATHS
-# 1
-#IMAGES_PATH = "jian/"
-#GREEN_PATH = IMAGES_PATH + "green/"
-#PHASE_PATH = IMAGES_PATH + "phase/"
-# 2
-#IMAGES_PATH = "MEF1/"
-#GREEN_PATH = IMAGES_PATH + "TSV_green/"
-#PHASE_PATH = IMAGES_PATH + "TSV_phase/"
-
-#GREEN_PATH = IMAGES_PATH + "Masks_phase/"
-#PHASE_PATH = IMAGES_PATH + "TSV_Labeled_phase/"
-    
 if DATASET == 3:
     # 3 Necroptosis HT29
-    IMAGES_PATH = "../Necroptosis/"
-    GREEN_PATH = IMAGES_PATH + "HT29_Green/"
-    PHASE_PATH = IMAGES_PATH + "HT29_phase/"
-    CROP_PHASE_PATH = IMAGES_PATH + "HT29_Crop_phase/"
-    CROP_GREEN_PATH = IMAGES_PATH + "HT29_Crop_green/"
+    CELL_TYPE = "HT29"
+    DEATH_TYPE = "Necroptosis"
+    IMAGES_PATH = "../first_batch/Necroptosis/"
 elif DATASET == 4:
     # 4 Necroptosis MEF
-    IMAGES_PATH = "../Necroptosis/"
-    GREEN_PATH = IMAGES_PATH + "MEF_Green/"
-    PHASE_PATH = IMAGES_PATH + "MEF_phase/"
-    CROP_PHASE_PATH = IMAGES_PATH + "MEF_Crop_phase/"
-    CROP_GREEN_PATH = IMAGES_PATH + "MEF_Crop_green/"
+    CELL_TYPE = "MEF"
+    DEATH_TYPE = "Necroptosis"
+    IMAGES_PATH = "../first_batch/Necroptosis/"
 elif DATASET == 5:
     # 5 Apoptosis HT29
-    IMAGES_PATH = "../Apoptosis/"
-    GREEN_PATH = IMAGES_PATH + "HT29_Green/"
-    PHASE_PATH = IMAGES_PATH + "HT29_phase/"
-    CROP_PHASE_PATH = IMAGES_PATH + "HT29_Crop_phase/"
-    CROP_GREEN_PATH = IMAGES_PATH + "HT29_Crop_green/"
+    CELL_TYPE = "HT29"
+    DEATH_TYPE = "Apoptosis"
+    IMAGES_PATH = "../first_batch/Apoptosis/"
 elif DATASET == 6:
     # 6 Apoptosis MEF
-    IMAGES_PATH = "../Apoptosis/"
-    GREEN_PATH = IMAGES_PATH + "MEF_Green/"
-    PHASE_PATH = IMAGES_PATH + "MEF_phase/"
-    CROP_PHASE_PATH = IMAGES_PATH + "MEF_Crop_phase/"
-    CROP_GREEN_PATH = IMAGES_PATH + "MEF_Crop_green/"
+    CELL_TYPE = "MEF"
+    DEATH_TYPE = "Apoptosis"
+    IMAGES_PATH = "../first_batch/Apoptosis/"
+# NEWPART--------------------------------------------------------------|
+elif DATASET == 7:
+    # 7 Necroptosis HT29 pt2
+    CELL_TYPE = "HT29"
+    DEATH_TYPE = "Necroptosis"
+    IMAGES_PATH = "../new_data/Necroptosis/"
+elif DATASET == 8:
+    # 4 Necroptosis MEF pt2
+    CELL_TYPE = "MEF"
+    DEATH_TYPE = "Necroptosis"
+    IMAGES_PATH = "../new_data/Necroptosis/"
+elif DATASET == 9:
+    # 5 Apoptosis HT29 pt2
+    CELL_TYPE = "HT29"
+    DEATH_TYPE = "Apoptosis"
+    IMAGES_PATH = "../new_data/Apoptosis/"
+elif DATASET == 10:
+    # 6 Apoptosis MEF pt2
+    CELL_TYPE = "MEF"
+    DEATH_TYPE = "Apoptosis"
+    IMAGES_PATH = "../new_data/Apoptosis/"
+
+# DATASET PATHS
+GREEN_PATH = IMAGES_PATH + CELL_TYPE + "_Green/"
+PHASE_PATH = IMAGES_PATH + CELL_TYPE + "_phase/"
+CROP_PHASE_PATH = IMAGES_PATH + CELL_TYPE + "_Crop_phase/"
+CROP_GREEN_PATH = IMAGES_PATH + CELL_TYPE + "_Crop_green/"

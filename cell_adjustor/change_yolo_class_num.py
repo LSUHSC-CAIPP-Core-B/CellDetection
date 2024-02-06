@@ -1,19 +1,25 @@
 import os
 from config import *
 
-#LABELED_IMAGES_DIR_PATH = IMAGES_PATH + "MEF_Labeles_phase/"
-LABELED_IMAGES_DIR_PATH = "sample_labels_dir/"
+# path to dir with labels
+LABELED_IMAGES_DIR_PATH = IMAGES_PATH + CELL_TYPE + "_Labels_phase_aug/"
 
 # first class/group in pre list is changed to first class in the post list
-classes_pre_swap = [[1, 3]] # list of lists of classes or list of classes ex. [[0,1], [3]]
-classes_post_swap = [11] # list of classes ex. [1, 2]
-
-new_lines = []
+classes_pre_swap = [[0]] # list of lists of classes ex. [[0,1], [3]]
+classes_post_swap = [1] # list of classes ex. [1, 2]
 
 labels = os.listdir(LABELED_IMAGES_DIR_PATH)
+i_label = 1
+len_labels = len(labels)
+print("STARTED")
 
 # for each label file in dir
 for label in labels:
+    if i_label%100 == 0:
+        print(str(i_label) + "/" + str(len_labels))
+    i_label+=1
+
+    new_lines = []
     label_path = LABELED_IMAGES_DIR_PATH + label
     label_file = open(label_path, 'r')
     lines = label_file.readlines()
@@ -30,7 +36,7 @@ for label in labels:
                     new_line = str(classes_post_swap[classes_list_id]) + line[len(line_class):]
         new_lines.append(new_line)
 
-# writing to file
-label_file_write = open(label_path, 'w')
-label_file_write.writelines(new_lines)
-label_file_write.close()
+    # writing to file
+    label_file_write = open(label_path, 'w')
+    label_file_write.writelines(new_lines)
+    label_file_write.close()

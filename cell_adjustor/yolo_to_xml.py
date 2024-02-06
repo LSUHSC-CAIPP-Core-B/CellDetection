@@ -4,9 +4,10 @@ from xml.dom.minidom import parseString
 from lxml.etree import Element, SubElement, tostring
 import numpy as np
 from os.path import join
+from config import *
 
 ## coco classes
-YOLO_CLASSES = ('cell_n')
+YOLO_CLASSES = ["",DEATH_TYPE]
 
 ## converts the normalized positions  into integer positions
 def unconvert(class_id, width, height, x, y, w, h):
@@ -20,12 +21,12 @@ def unconvert(class_id, width, height, x, y, w, h):
 
 
 ## path root folder
-ROOT = 'MEF1/MEF1_split'
-
+ROOT = '../CellDataset/' + DEATH_TYPE + "/"
+SPLIT = "val"
 
 ## converts coco into xml 
 def xml_transform(root, classes):  
-    class_path  = join(root, 'labels/val')
+    class_path  = join(root, 'labels/' + SPLIT)
     ids = list()
     l=os.listdir(class_path)
     
@@ -35,8 +36,8 @@ def xml_transform(root, classes):
         
     ids=[x.split('.')[0] for x in l]   
 
-    annopath = join(root, 'labels/val', '%s.txt')
-    imgpath = join(root, 'images/val', '%s.png')
+    annopath = join(root, 'labels/' + SPLIT, '%s.txt')
+    imgpath = join(root, 'images/' + SPLIT, '%s.png')
     
     os.makedirs(join(root, 'outputs'), exist_ok=True)
     outpath = join(root, 'outputs', '%s.xml')
@@ -61,7 +62,7 @@ def xml_transform(root, classes):
         
         node_source= SubElement(node_root, 'source')
         node_database = SubElement(node_source, 'database')
-        node_database.text = 'Coco database'
+        node_database.text = 'Cell database'
         
         node_size = SubElement(node_root, 'size')
         node_width = SubElement(node_size, 'width')
@@ -79,7 +80,6 @@ def xml_transform(root, classes):
         target = (annopath % img_id)
         if os.path.exists(target):
             label_norm= np.loadtxt(target).reshape(-1, 5)
-
             for i in range(len(label_norm)):
                 labels_conv = label_norm[i]
                 new_label = unconvert(labels_conv[0], width, height, labels_conv[1], labels_conv[2], labels_conv[3], labels_conv[4])
@@ -89,7 +89,6 @@ def xml_transform(root, classes):
                 
                 node_pose = SubElement(node_object, 'pose')
                 node_pose.text = 'Unspecified'
-                
                 
                 node_truncated = SubElement(node_object, 'truncated')
                 node_truncated.text = '0'
@@ -105,8 +104,7 @@ def xml_transform(root, classes):
                 node_ymax = SubElement(node_bndbox, 'ymax')
                 node_ymax.text = str(new_label[4])
                 xml = tostring(node_root, pretty_print=True)  
-                dom = parseString(xml)
-        print(xml)  
+                #dom = parseString(xml)  
         f =  open(outpath % img_id, "wb")
         f.write(xml)
         f.close()     

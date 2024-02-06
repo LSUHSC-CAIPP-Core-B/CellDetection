@@ -13,7 +13,7 @@ Iterate over images in provided dir and for each image crop part of it to gen ma
 We cover whole image while croping. Crop params and path might need to be adjusted for different datasets to match iamge size and desired overlap of crops.
 
 ## Augumentation
-`augument_dell_iamges.ipynb`   
+`augument_cell_iamges.ipynb`   
 Augumentations are only a change in brightness and contrast. We augument images, labels, masks at the same time.
 
 ## Spliting
