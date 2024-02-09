@@ -1,0 +1,9 @@
+path: '/Users/sapplab/Desktop/CellDataProcessing'
+train: 'MEF1/MEF1_split/images/train'
+val: 'MEF1/MEF1_split/images/val'
+
+nc: 2
+
+names:
+  0: 'apoptosis'
+  1: 'necroptosis'
