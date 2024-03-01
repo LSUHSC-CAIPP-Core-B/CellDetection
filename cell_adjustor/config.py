@@ -14,7 +14,9 @@ PREPROCESS_VALS = 0
 # 8 - Necroptosis MEF pt2
 # 9 - Apoptosis HT29 pt2
 # 10 - Apoptosis MEF pt2
-DATASET = 8
+# 11 Apoptosis MEF test
+# 12 Necroptosis MEF test
+DATASET = 12
 
 # INITIAL VARS
 if PREPROCESS_VALS == 0:
@@ -85,20 +87,31 @@ elif DATASET == 7:
     DEATH_TYPE = "Necroptosis"
     IMAGES_PATH = "../new_data/Necroptosis/"
 elif DATASET == 8:
-    # 4 Necroptosis MEF pt2
+    # 8 Necroptosis MEF pt2
     CELL_TYPE = "MEF"
     DEATH_TYPE = "Necroptosis"
     IMAGES_PATH = "../new_data/Necroptosis/"
 elif DATASET == 9:
-    # 5 Apoptosis HT29 pt2
+    # 9 Apoptosis HT29 pt2
     CELL_TYPE = "HT29"
     DEATH_TYPE = "Apoptosis"
     IMAGES_PATH = "../new_data/Apoptosis/"
 elif DATASET == 10:
-    # 6 Apoptosis MEF pt2
+    # 10 Apoptosis MEF pt2
     CELL_TYPE = "MEF"
     DEATH_TYPE = "Apoptosis"
     IMAGES_PATH = "../new_data/Apoptosis/"
+# TESTDATA-------------------------------------------------------------|
+elif DATASET == 11:
+    # 11 Apoptosis MEF test
+    CELL_TYPE = "MEF"
+    DEATH_TYPE = "Apoptosis"
+    IMAGES_PATH = "../test_images/Apoptosis/"
+elif DATASET == 12:
+    # 12 Necroptosis MEF test
+    CELL_TYPE = "MEF"
+    DEATH_TYPE = "Necroptosis"
+    IMAGES_PATH = "../test_images/Necroptosis/"
 
 # DATASET PATHS
 GREEN_PATH = IMAGES_PATH + CELL_TYPE + "_Green/"
