@@ -6,7 +6,7 @@ Contains cell adjustor script that enables us to check parameters of cell images
 Here are also all the data preprocessing/managment scripts used to prepare the dataset.
 
 ## yolo
-Yolo training pipeline
+Yolo training pipeline with custom model wrapper and inference example.
 
 ## unet
-U-Net training pipeline
+U-Net training pipeline with inference
