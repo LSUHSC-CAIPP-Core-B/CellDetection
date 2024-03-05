@@ -1,4 +1,5 @@
 # CellDetection
+![Title](docs/cell_example.png)
 Repository for died cell detection with apoptosis and necroptosis distinction.
 
 ## cell_adjustor
