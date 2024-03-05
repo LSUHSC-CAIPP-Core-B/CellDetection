@@ -34,3 +34,6 @@ Script to change yolo class numbers in label files.
 ## Visualization
 `box_rand_images.ipynb`   
 Notbeook to visualise random images with bounding boxes.   
+
+## CellProcessor
+File with variety of functions used along all the data processing. Functions are used exaclty for labeling, reading images, converting labels and general visualization.

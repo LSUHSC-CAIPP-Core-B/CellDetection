@@ -7,6 +7,3 @@ Here are also all the data preprocessing/managment scripts used to prepare the d
 
 ## yolo
 Yolo training pipeline with custom model wrapper and inference example.
-
-## unet
-U-Net training pipeline with inference

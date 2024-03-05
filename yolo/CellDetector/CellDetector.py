@@ -67,6 +67,25 @@ class CellDetector:
                     results_all.append(result)
         return results_all
 
+    def predict_with_heatmap(self, big_image, conf, iou):
+         """
+        Predict boxes if died cells on a single image. Predictions are made on a smaller random cropped images from the original
+        and then scaled to the original image. All the predictions are then converted to a heat map.
+
+        big_image (np.array): image to predict
+        conf (float): confidence threshold for predictions
+        iou (float): IoU threshold for predictions
+
+        return: list of predicted boxes with classes
+        """
+        big_image = self.prepare_image_to_crop_heatmap(big_image)
+
+        # TODO
+        # 1. for each image in random crop (limit random crop to image dimension without padding)
+        # 2. predict for each iamge with 3 x 90deg rotations
+        # 3. postprocess predictions and append to list
+        # 4. 
+
 # |----------------------RESULT PROCESSING--------------------------------------------|
 
     def scale_crop_results(self, results, curr_topleft_x, curr_topleft_y):
@@ -109,7 +128,7 @@ class CellDetector:
 
     def prepare_image_to_crop_no_overlap(self, image, withWinShift = False):
         """
-        Add padding if required to the image before padding to crop it into equal parts
+        Add padding if required to the image before crop it into equal parts
 
         image (np.array): image to add padding to
         withWinShift (bool): if to return shift values of croping window
@@ -144,6 +163,24 @@ class CellDetector:
         else:
             return image
 
+    def prepare_image_to_crop_heatmap(self, image):
+        """
+        Add padding to the image before random cropping for heatmap to make sure to cover all parts of image in all positions
+
+        image (np.array): image to add padding to
+
+        return: processed image
+        """
+        top = 128
+        bottom = 128
+        left = 128
+        right = 128
+
+        image = cv2.copyMakeBorder(image, top, bottom, left, right, cv2.BORDER_CONSTANT)
+
+        return image
+
+
 # |----------------------VISUALIZATIONS--------------------------------------------|
 
     def box_image(self, image, boxes, image_green = None):
@@ -170,14 +207,14 @@ class CellDetector:
             cell_cls = box[4]
             if cell_cls == 0:
                 color = (255,255,255)
-                color_green = (255,0,0)
+                color_green = (255,50,100)
             elif cell_cls == 1:
                 color = (0,0,0)
-                color_green = (0,0,255)
+                color_green = (50,100,255)
 
             image = cv2.rectangle(image, (l,t), (r,b), color, 2)
             if image_green is not None:
-                image_green_crop_3channel = cv2.rectangle(image_green_crop_3channel, (l,t), (r,b), color_green, 1)
+                image_green_crop_3channel = cv2.rectangle(image_green_crop_3channel, (l,t), (r,b), color_green, 2)
         
         if image_green is not None:
             return image, image_green_crop_3channel
