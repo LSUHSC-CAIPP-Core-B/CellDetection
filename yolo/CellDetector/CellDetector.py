@@ -1,7 +1,25 @@
 from ultralytics import YOLO
 import cv2
 import math
+import random
 import numpy as np
+
+def random_crop(image, crop_size):
+    """
+    Randomly crop from an image in provided size
+
+    image (np.array): image to crop
+    crop_size (int): size of a cropped image
+
+    return: cropped image with top and left coordinates
+    """
+    image_h, image_w = image.shape[:2]
+    left = random.randint(0, image_w - crop_size)
+    top = random.randint(0, image_h - crop_size)
+    right = left + crop_size
+    bottom = top + crop_size
+    cropped_image = image[top:bottom, left:right]
+    return cropped_image, top, left
 
 class CellDetector:
     """
@@ -33,7 +51,7 @@ class CellDetector:
         results = self.process_results(results)
         return results
 
-    def predict_with_crop(self, big_image, conf, iou, withOverlap = False):
+    def predict_with_crop(self, big_image, conf, iou, withOverlap = False, withImage = False):
         """
         Predict boxes if died cells on a single image. Predictions are made on a smaller cropped images from the original
         and then scaled to the original image.
@@ -42,8 +60,9 @@ class CellDetector:
         conf (float): confidence threshold for predictions
         iou (float): IoU threshold for predictions
         withOverlap (bool): If cropping should be with overlap or not
+        withImage (bool): If should return processed image
 
-        return: list of predicted boxes with classes
+        return: list of predicted boxes with classes (optionaly processed iamge)
         """
         if withOverlap:
             pass
@@ -65,20 +84,56 @@ class CellDetector:
                 results = self.scale_crop_results(results, curr_topleft_x, curr_topleft_y)
                 for result in results:
                     results_all.append(result)
-        return results_all
 
-    def predict_with_heatmap(self, big_image, conf, iou):
-         """
+        if withImage:
+            return results_all, big_image
+        else:
+            return results_all
+
+    def predict_with_heatmap(self, big_image, conf, iou, desired_coverage = 100, withImage = False):
+        """
         Predict boxes if died cells on a single image. Predictions are made on a smaller random cropped images from the original
         and then scaled to the original image. All the predictions are then converted to a heat map.
 
         big_image (np.array): image to predict
         conf (float): confidence threshold for predictions
         iou (float): IoU threshold for predictions
+        desired_coverage (int): Number of times to cover each pixel
+        withImage (bool): If should return processed image
 
         return: list of predicted boxes with classes
         """
+
         big_image = self.prepare_image_to_crop_heatmap(big_image)
+        # Calculate the number of crops needed
+        big_image_h, big_image_w = big_image.shape[:2]
+        total_crops = big_image_w * big_image_h * desired_coverage // (self.IMAGE_SIZE * self.IMAGE_SIZE)
+
+        print(total_crops)
+
+        results_all = []
+
+        for _ in range(total_crops):
+            img_crop_read, top, left = random_crop(big_image, self.IMAGE_SIZE)
+            for rotation in [cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_180, cv2.ROTATE_90_COUNTERCLOCKWISE, 3]:
+                if rotation != 3:
+                    img_crop_base = img_crop_read.copy()
+                    img_crop = cv2.rotate(img_crop_base, rotation)
+                else:
+                    img_crop = img_crop_read.copy()
+                results = self.predict(img_crop, 0.2, 0.4)
+                print(results)
+                results = self.rotate_results(results, rotation)
+                print(results)
+                results = self.scale_crop_results(results, left, top)
+                for result in results:
+                    results_all.append(result)
+            break
+
+        if withImage:
+            return results_all, big_image
+        else:
+            return results_all
 
         # TODO
         # 1. for each image in random crop (limit random crop to image dimension without padding)
@@ -122,6 +177,44 @@ class CellDetector:
             r = int(b_xyxy[2])
             b = int(b_xyxy[3])
             results_list.append([t,l,b,r,cell_cls])
+        return results_list
+
+    def rotate_results(self, results, rotation):
+        """
+        Rotate a results by a given angle around. Rotation is couterclokwise to revert results to original image position.
+
+        results (list(list)): list of predicted boxes with classes to rotate
+        rotation (int): rotation type by which to choose angle to rotate by.
+        Possible rotation values:
+         - 0 - 90 deg clockwise
+         - 1 - 180 deg
+         - 2 - 90 counterclokwise
+
+        return: list of rotated results
+        """
+        # set angle in degrees, convert radians and add minus to rotate counterclockwise
+        angle = (rotation * 90) + 90
+        angle = -math.radians(angle)
+
+        results_list = []
+
+        for result in results:
+            top = result[0]
+            left = result[1]
+            bottom = result[2]
+            right = result[3]
+
+            # middle of the image 
+            oy = self.IMAGE_SIZE/2
+            ox = self.IMAGE_SIZE/2
+
+            left_r = int(ox + math.cos(angle) * (left - ox) - math.sin(angle) * (top - oy))
+            top_r = int(oy + math.sin(angle) * (left - ox) + math.cos(angle) * (top - oy))
+            right_r = int(ox + math.cos(angle) * (right - ox) - math.sin(angle) * (bottom - oy))
+            bottom_r = int(oy + math.sin(angle) * (right - ox) + math.cos(angle) * (bottom - oy))
+
+            results_list.append([top_r, left_r, bottom_r, right_r, result[4]])
+
         return results_list
 
 # |----------------------PREPROCESSING--------------------------------------------|
@@ -183,19 +276,27 @@ class CellDetector:
 
 # |----------------------VISUALIZATIONS--------------------------------------------|
 
-    def box_image(self, image, boxes, image_green = None):
+    def box_image(self, image, boxes, image_green = None, prepare_type = 0):
         """
         Add prediction boxes of cells in specified colors to the image
 
         image (np.array): image to add boxes to
         boxes (list(list)): list of predicted boxes to add to the image
         image_green (np.array): additional image to add boxes to
+        prepare_type (int): type of preparation to be done on green image
+        Possible prepare_type values:
+         - 0 - no overlap
+         - 1 - padding for heatmap
 
         return: image with added boxes (optionaly: additional image with added boxes)
         """
-        image = self.prepare_image_to_crop_no_overlap(image)
+
         if image_green is not None:
-            image_green = self.prepare_image_to_crop_no_overlap(image_green)
+            if prepare_type == 0:
+                image_green = self.prepare_image_to_crop_no_overlap(image_green)
+            elif prepare_type == 1:
+                image_green = self.prepare_image_to_crop_heatmap(image_green)
+
             image_green_crop_3channel = cv2.merge((image_green,image_green,image_green))
 
         for box in boxes:
@@ -212,7 +313,7 @@ class CellDetector:
                 color = (0,0,0)
                 color_green = (50,100,255)
 
-            image = cv2.rectangle(image, (l,t), (r,b), color, 2)
+            image = cv2.rectangle(image, (l,t), (r,b), color_green, 2)
             if image_green is not None:
                 image_green_crop_3channel = cv2.rectangle(image_green_crop_3channel, (l,t), (r,b), color_green, 2)
         
