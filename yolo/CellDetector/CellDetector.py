@@ -90,7 +90,7 @@ class CellDetector:
         else:
             return results_all
 
-    def predict_with_heatmap(self, big_image, conf, iou, desired_coverage = 100, withImage = False):
+    def predict_with_heatmap(self, big_image, conf, iou, desired_coverage = 100, withImage = False, randomCrop = True):
         """
         Predict boxes if died cells on a single image. Predictions are made on a smaller random cropped images from the original
         and then scaled to the original image. All the predictions are then converted to a heat map.
@@ -100,46 +100,85 @@ class CellDetector:
         iou (float): IoU threshold for predictions
         desired_coverage (int): Number of times to cover each pixel
         withImage (bool): If should return processed image
+        randomCrop (bool): If cropping should be random or not
 
-        return: list of predicted boxes with classes
-        """
+        return: list of predicted boxes with classes (optionaly big_image and total coverage of each pixel)
+        """ 
 
         big_image = self.prepare_image_to_crop_heatmap(big_image)
         # Calculate the number of crops needed
         big_image_h, big_image_w = big_image.shape[:2]
-        total_crops = big_image_w * big_image_h * desired_coverage // (self.IMAGE_SIZE * self.IMAGE_SIZE)
 
-        print(total_crops)
+        # prepare needed vars 
+        if randomCrop:
+            print("Random Croping")
+            total_crops = big_image_w * big_image_h * desired_coverage // (self.IMAGE_SIZE * self.IMAGE_SIZE)
+            print("Total random crops to execute: " + str(total_crops))
+        else:
+            print("Shift cropping")
+            shift = math.floor(128/math.sqrt(desired_coverage))
+            width_shift = shift
+            height_shift = shift
+            num_width_windows = math.floor(big_image_w/width_shift)
+            num_height_windows = math.floor(big_image_h/height_shift)
+            total_crops = num_width_windows * num_height_windows
+            total_coverage = (width_shift-2) * (height_shift-2)
+            print("Total crops to execute: " + str(total_crops))
+            print("Total coverage of each pixel: " + str(total_coverage))
 
         results_all = []
-
-        for _ in range(total_crops):
-            img_crop_read, top, left = random_crop(big_image, self.IMAGE_SIZE)
-            for rotation in [cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_180, cv2.ROTATE_90_COUNTERCLOCKWISE, 3]:
-                if rotation != 3:
-                    img_crop_base = img_crop_read.copy()
-                    img_crop = cv2.rotate(img_crop_base, rotation)
-                else:
-                    img_crop = img_crop_read.copy()
-                results = self.predict(img_crop, 0.2, 0.4)
-                print(results)
-                results = self.rotate_results(results, rotation)
-                print(results)
-                results = self.scale_crop_results(results, left, top)
-                for result in results:
-                    results_all.append(result)
-            break
+        # different cropping paths
+        # RANDOM
+        if randomCrop:
+            for _ in range(total_crops):
+                img_crop_read, top, left = random_crop(big_image, self.IMAGE_SIZE)
+                for rotation in [cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_180, cv2.ROTATE_90_COUNTERCLOCKWISE, 3]:
+                    if rotation != 3:
+                        img_crop_base = img_crop_read.copy()
+                        img_crop = cv2.rotate(img_crop_base, rotation)
+                    else:
+                        img_crop = img_crop_read.copy()
+                    results = self.predict(img_crop, 0.2, 0.4)
+                    print(results)
+                    results = self.rotate_results(results, rotation)
+                    print(results)
+                    results = self.scale_crop_results(results, left, top)
+                    for result in results:
+                        results_all.append(result)
+                break
+        # SHIFT
+        # TODO not each pixel may be covered the same amount (more padding on edges)???
+        else:
+            for width_window in range(int(num_width_windows)):
+                for height_window in range(int(num_height_windows)):
+                    left = width_window * width_shift
+                    top = height_window * height_shift
+                    img_crop_read = big_image[top:top + self.CROP_HEIGHT, left:left + self.CROP_WIDTH]
+                    for rotation in [cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_180, cv2.ROTATE_90_COUNTERCLOCKWISE, 3]:
+                        if rotation != 3:
+                            img_crop_base = img_crop_read.copy()
+                            img_crop = cv2.rotate(img_crop_base, rotation)
+                        else:
+                            img_crop = img_crop_read.copy()
+                        results = self.predict(img_crop, 0.2, 0.4)
+                        print(results)
+                        results = self.rotate_results(results, rotation)
+                        print(results)
+                        results = self.scale_crop_results(results, left, top)
+                        for result in results:
+                            results_all.append(result)
+                break
 
         if withImage:
-            return results_all, big_image
+            if randomCrop:
+                return results_all, big_image
+            else:
+                return results_all, big_image, total_coverage
         else:
-            return results_all
-
-        # TODO
-        # 1. for each image in random crop (limit random crop to image dimension without padding)
-        # 2. predict for each iamge with 3 x 90deg rotations
-        # 3. postprocess predictions and append to list
-        # 4. 
+            if randomCrop:
+                return results_all
+            else:
+                return results_all, total_coverage
 
 # |----------------------RESULT PROCESSING--------------------------------------------|
 
@@ -316,8 +355,30 @@ class CellDetector:
             image = cv2.rectangle(image, (l,t), (r,b), color_green, 2)
             if image_green is not None:
                 image_green_crop_3channel = cv2.rectangle(image_green_crop_3channel, (l,t), (r,b), color_green, 2)
-        
+
         if image_green is not None:
             return image, image_green_crop_3channel
         else:
             return image
+
+    def gen_heatmap_mask(self, image, results, total_coverage):
+        image_h, image_w = image.shape[:2]
+        base_image = np.zeros((image_h, image_w), dtype=np.int16)
+        for result in results:
+            t = result[0]
+            l = result[1]
+            b = result[2]
+            r = result[3]
+            r_cls = result[4]
+
+            # add values to the predicted pixels based on class
+            if r_cls == 0:
+                base_image[t:b, l:r] +=1 
+            elif r_cls == 1:
+                base_image[t:b, l:r] -=1
+
+        # normalize to (-1,1)
+        base_image = base_image.astype(np.float16)
+        base_image = (2*(base_image-(-total_coverage))/(total_coverage-(-total_coverage))) - 1
+
+        return base_image
