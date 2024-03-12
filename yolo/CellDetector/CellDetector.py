@@ -365,6 +365,15 @@ class CellDetector:
             return image
 
     def gen_heatmap_mask(self, image, results, total_coverage):
+        """
+        Generate heat map based on provided results in the shape of provided image
+
+        image (np.array): image to add boxes to
+        results (list(list)): list of predicted boxes to add to the image
+        total_coverage (int): number of times each pixel was covered, for normalization purposes
+
+        return: heat map image
+        """
         image_h, image_w = image.shape[:2]
         base_image = np.zeros((image_h, image_w), dtype=np.int16)
         for result in results:
