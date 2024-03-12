@@ -1,6 +1,3 @@
-import cv2
-import numpy as np
-import imutils
 import os
 import csv
 import random

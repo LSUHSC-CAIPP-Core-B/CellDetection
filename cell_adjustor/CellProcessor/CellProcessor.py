@@ -1,7 +1,6 @@
 import cv2
 import imutils
 import numpy as np
-import tensorflow as tf
 
 def get_bboxes(img_dilation, dims=False):
     # blur
@@ -30,11 +29,21 @@ def get_bboxes(img_dilation, dims=False):
         yp_min = int(y_min - y_padding)
         yp_max = int(y_min + box_width + y_padding)
 
+        h, w = img_dilation.shape[:2]
+
+        if xp_max > w:
+            xp_max = w
+        if xp_min <= 0:
+            xp_min = 0
+        if yp_max > h:
+            yp_max = h
+        if yp_min <= 0:
+            yp_min = 0
+
         start_pt = (xp_min, yp_min) # top left
         end_pt = (xp_max, yp_max) # bottom right
 
         if dims:
-            h, w = img_dilation.shape[:2]
             bboxes.append([start_pt, end_pt, w, h])
         else:
             bboxes.append([start_pt, end_pt])
@@ -92,16 +101,6 @@ def get_label_yolo(start_pt, end_pt, img_width, img_height):
     y = float(y_center/img_height)
     w = float(box_width/img_width)
     h = float(box_height/img_height)
-
-    if x > 1.0:
-        x = 1.0
-    elif x < 0:
-        x = 0.0
-
-    if y > 1.0:
-        y = 1.0
-    elif y < 0:
-        y = 0.0
 
     return x, y, w ,h
 

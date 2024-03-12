@@ -4,7 +4,7 @@
 # 1 - HT29 cells from 01/08 fine tuning
 # 2 - MEF Apoptosis pt2 cells from 02/01 fine tuning
 # 3 - HT29 Necroptosis/Apoptosis pt2 02/01 - 02/02 fine tuning
-PREPROCESS_VALS = 0
+PREPROCESS_VALS = 3
 # Datasets
 # 3 - Necroptosis HT29
 # 4 - Necroptosis MEF
@@ -16,7 +16,7 @@ PREPROCESS_VALS = 0
 # 10 - Apoptosis MEF pt2
 # 11 Apoptosis MEF test
 # 12 Necroptosis MEF test
-DATASET = 12
+DATASET = 101
 
 # INITIAL VARS
 if PREPROCESS_VALS == 0:
@@ -101,6 +101,16 @@ elif DATASET == 10:
     CELL_TYPE = "MEF"
     DEATH_TYPE = "Apoptosis"
     IMAGES_PATH = "../new_data/Apoptosis/"
+elif DATASET == 91:
+    # 9 Apoptosis HT29 pt2 TEST
+    CELL_TYPE = "HT29"
+    DEATH_TYPE = "Apoptosis"
+    IMAGES_PATH = "../new_data/Apoptosis2/"
+elif DATASET == 101:
+    # 10 Apoptosis MEF pt2 TEST
+    CELL_TYPE = "MEF"
+    DEATH_TYPE = "Apoptosis"
+    IMAGES_PATH = "../new_data/Apoptosis2/"
 # TESTDATA-------------------------------------------------------------|
 elif DATASET == 11:
     # 11 Apoptosis MEF test
