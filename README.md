@@ -10,9 +10,6 @@ Python version required: 3.9.*
 #### Mac
 Install requirements with:    
 `pip install -r requirements_cell_mac.txt`
-#### Ubuntu
-Install requirements with:    
-`pip install -r requirements_cell.txt`
 
 ## yolo
 Yolo training pipeline with custom model wrapper and inference example.
@@ -21,8 +18,8 @@ Python version required: 3.8.*
 #### Mac
 Install requirements with:    
 `pip install -r requirements_ultralytics_mac.txt`
-#### Ubuntu
+#### Ubuntu with CUDA
 Install requirements with:    
-`pip install -r requirements_ultralytics.txt`
+`conda create --name <env> --file requirements_ultralytics.txt`   
 ### Example output
 ![example1](docs/cell_example.png)

@@ -35,23 +35,25 @@ class CellDetector:
 
 # |----------------------PREDICTIONS--------------------------------------------|
 
-    def predict(self, image, conf, iou):
+    def predict(self, image, conf, iou, device = None):
         """
         Predict boxes of died cells on a single image and postprocess the results
 
         image (np.array): image to predict
         conf (float): confidence threshold for predictions
         iou (float): IoU threshold for predictions
+        device (str): device argument to pass to yolo predict function to choose which device (CPU/GPU) use for inference 
+        for simple GPU usage use "device=0"
 
         return: list of predicted boxes with classes
         """
         if len(image.shape) < 3:
             image = cv2.merge((image,image,image))
-        results = self.model.predict(image, conf=conf, iou=iou, imgsz=self.IMAGE_SIZE)
+        results = self.model.predict(image, conf=conf, iou=iou, imgsz=self.IMAGE_SIZE, device=device)
         results = self.process_results(results)
         return results
 
-    def predict_with_crop(self, big_image, conf, iou, withOverlap = False, withImage = False):
+    def predict_with_crop(self, big_image, conf, iou, device, withOverlap = False, withImage = False):
         """
         Predict boxes if died cells on a single image. Predictions are made on a smaller cropped images from the original
         and then scaled to the original image.
@@ -59,6 +61,8 @@ class CellDetector:
         big_image (np.array): image to predict
         conf (float): confidence threshold for predictions
         iou (float): IoU threshold for predictions
+        device (str): device argument to pass to yolo predict function to choose which device (CPU/GPU) use for inference.
+        for simple GPU usage use "device=0"
         withOverlap (bool): If cropping should be with overlap or not
         withImage (bool): If should return processed image
 
@@ -80,7 +84,7 @@ class CellDetector:
                 curr_topleft_x = width_window * width_shift
                 curr_topleft_y = height_window * height_shift
                 img_crop = big_image[curr_topleft_y:curr_topleft_y + self.CROP_HEIGHT, curr_topleft_x:curr_topleft_x + self.CROP_WIDTH]
-                results = self.predict(img_crop, 0.2, 0.4)
+                results = self.predict(img_crop, conf, iou, device)
                 results = self.scale_crop_results(results, curr_topleft_x, curr_topleft_y)
                 for result in results:
                     results_all.append(result)
@@ -90,7 +94,7 @@ class CellDetector:
         else:
             return results_all
 
-    def predict_with_heatmap(self, big_image, conf, iou, desired_coverage = 100, withImage = False, randomCrop = True):
+    def predict_with_heatmap(self, big_image, conf, iou, device, desired_coverage = 100, withImage = False, randomCrop = True):
         """
         Predict boxes if died cells on a single image. Predictions are made on a smaller random cropped images from the original
         and then scaled to the original image. All the predictions are then converted to a heat map.
@@ -98,6 +102,8 @@ class CellDetector:
         big_image (np.array): image to predict
         conf (float): confidence threshold for predictions
         iou (float): IoU threshold for predictions
+        device (str): device argument to pass to yolo predict function to choose which device (CPU/GPU) use for inference.
+        for simple GPU usage use "device=0"
         desired_coverage (int): Number of times to cover each pixel
         withImage (bool): If should return processed image
         randomCrop (bool): If cropping should be random or not
@@ -122,7 +128,7 @@ class CellDetector:
             num_width_windows = math.floor(big_image_w/width_shift)
             num_height_windows = math.floor(big_image_h/height_shift)
             total_crops = num_width_windows * num_height_windows
-            total_coverage = (width_shift-2) * (height_shift-2)
+            total_coverage = math.floor(math.sqrt(desired_coverage)) * math.floor(math.sqrt(desired_coverage))
             print("Total crops to execute: " + str(total_crops))
             print("Total coverage of each pixel: " + str(total_coverage))
 
@@ -138,16 +144,14 @@ class CellDetector:
                         img_crop = cv2.rotate(img_crop_base, rotation)
                     else:
                         img_crop = img_crop_read.copy()
-                    results = self.predict(img_crop, 0.2, 0.4)
+                    results = self.predict(img_crop, conf, iou, device)
                     print(results)
                     results = self.rotate_results(results, rotation)
                     print(results)
                     results = self.scale_crop_results(results, left, top)
                     for result in results:
                         results_all.append(result)
-                break
         # SHIFT
-        # TODO not each pixel may be covered the same amount (more padding on edges)???
         else:
             for width_window in range(int(num_width_windows)):
                 for height_window in range(int(num_height_windows)):
@@ -167,7 +171,6 @@ class CellDetector:
                         results = self.scale_crop_results(results, left, top)
                         for result in results:
                             results_all.append(result)
-                break
 
         if withImage:
             if randomCrop:
