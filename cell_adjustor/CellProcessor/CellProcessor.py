@@ -2,7 +2,18 @@ import cv2
 import imutils
 import numpy as np
 
+# Set of functions to work with dataset
+
 def get_bboxes(img_dilation, dims=False):
+    """
+    Get bounding boxes from processed image. We get contours from img_dilation and generate bounding boxes based on them.
+
+    img_dilation (np.array): processed image to get bounding boxes from
+    dims (bool): if to include img_dilation dimensions in return
+
+    return: list of bounding boxes top-left and bottom-right points in format like: [[(l,t),(r,b)],[(l,t),(r,b)],...]
+    (optionaly with img_dilation dimensions in format like: [[(l,t),(r,b), w, h],[(l,t),(r,b), w, h],...])
+    """
     # blur
     img_blur = cv2.GaussianBlur(img_dilation, (3, 3), 0)
 
@@ -50,6 +61,14 @@ def get_bboxes(img_dilation, dims=False):
     return bboxes
 
 def draw_contours(img_dilation, img_base):
+    """
+    Draw bounding boxes on the original image. The boxes are generated based on processed image img_dilation
+
+    img_dilation (np.array): processed image to get bounding boxes from
+    img_base (np.array): iamge to apply bounding boxes to
+
+    return: original image with drawn bounding boxes
+    """
     img_out = img_base.copy()
     bboxes = get_bboxes(img_dilation)
     for start_pt, end_pt in bboxes:
@@ -58,6 +77,19 @@ def draw_contours(img_dilation, img_base):
     return img_out
 
 def process_image(img, contrast, brightness, threshold, iterations_erode, iterations_dilate, plot=False):
+    """
+    Process microscopic image to find green stains spots where the died cells are. Generates thresholded image with the spots.
+
+    img (np.array): microscopic image to process
+    contrast (float): value for contrast change of the image
+    brightness (float): value for brightness change of the image
+    threshold (int): threshold value for the image
+    iterations_erode (int): how many interations of erosion to execute
+    iterations_dialate (int): how many interations of dilation to execute
+    plot (bool): if to include images from all steps for visualization purposes
+
+    return: processed image (optionaly images from all the processing steps)
+    """
     # brightness and contrast
     img_br = cv2.addWeighted(img, contrast, np.zeros(img.shape, img.dtype), 0, brightness)
     # threshold
@@ -73,6 +105,9 @@ def process_image(img, contrast, brightness, threshold, iterations_erode, iterat
         return img_dilation
     
 def read_image(green_image_path, base_image_path):
+    """
+    
+    """
     img_base = cv2.imread(base_image_path, cv2.IMREAD_UNCHANGED)
     img = cv2.imread(green_image_path, cv2.IMREAD_UNCHANGED)
     #print(f'dtype: {img.dtype}, shape: {img.shape}, min: {np.min(img)}, max: {np.max(img)}')
@@ -81,6 +116,9 @@ def read_image(green_image_path, base_image_path):
     return img, img_base
 
 def get_label(start_pt, end_pt):
+    """
+    
+    """
     x_min = start_pt[0]
     y_min = start_pt[1]
     x_max = end_pt[0]
@@ -95,6 +133,9 @@ def get_label(start_pt, end_pt):
     return x_center, y_center, box_width, box_height
 
 def get_label_yolo(start_pt, end_pt, img_width, img_height):
+    """
+    
+    """
     x_center, y_center, box_width, box_height = get_label(start_pt, end_pt)
 
     x = float(x_center/img_width)
@@ -105,6 +146,9 @@ def get_label_yolo(start_pt, end_pt, img_width, img_height):
     return x, y, w ,h
 
 def read_yolo_labels(annotation_file):
+    """
+    
+    """
     bboxes_list = []
     classes_list = []
     with open(annotation_file, "r") as af:
@@ -122,6 +166,9 @@ def read_yolo_labels(annotation_file):
     return bboxes_list, classes_list
 
 def yolo_to_original(img, yolo_label):
+    """
+    
+    """
     img_height, img_width = img.shape[:2]
     xc = float(yolo_label[0] * img_width)
     yc = float(yolo_label[1] * img_height)
@@ -133,6 +180,9 @@ def yolo_to_original(img, yolo_label):
     return x, y, w, h
 
 def crop_img_from_label(img, yolo_label, padding=0, retCords=False, withMask=False, img_mask=None):
+    """
+    
+    """
     x, y, w, h = yolo_to_original(img, yolo_label)
     img_height, img_width = img.shape[:2]
     if img_mask is None:
@@ -140,13 +190,6 @@ def crop_img_from_label(img, yolo_label, padding=0, retCords=False, withMask=Fal
         img_mask = cv2.rectangle(img_mask, (x,y), (x+w,y+h), (255,255,255), -1)
 
     if padding != 0:
-        #TODO add padding but check if there is enough image
-        '''
-        HAVE TO KEEP IT SQUARE
-
-        if px to low double padding in right
-        others same way
-        '''
         px = x - padding
         py = y - padding
         pxw = x + w + padding
