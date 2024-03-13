@@ -14,12 +14,12 @@ Install requirements with:
 ## yolo
 Yolo training pipeline with custom model wrapper and inference example.
 ### Setup
-Setup was tested on an Ubunto 20.04 LTS machine with NVIDIA RTX A5000 and CUDA 12.3.   
 Python version required: 3.8.*
 #### Mac
 Install requirements with:    
 `pip install -r requirements_ultralytics_mac.txt`
 #### Ubuntu with CUDA
+Setup was tested on an Ubunto 20.04 LTS machine with NVIDIA RTX A5000 and CUDA 12.3.   
 Install requirements with:    
 `conda create --name <env> --file requirements_ultralytics.txt`   
 ### Example output
