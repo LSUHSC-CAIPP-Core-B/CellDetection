@@ -19,11 +19,14 @@ This training Python script was mainly used for training and is a minimal exampl
 ## Inference
 ### Base inference
 To test the model on an image file *yolo_inference_test.ipynb* was made. The notebook performes prediction on a given image and can display the results. The inference is made on cropped images of the  original image provided to suit the model requirements and then our custom wrapper takes care of the result predictions format for visualization purposes. The visualization can be done with additional microscopic image of staining.  
+![example2](docs/cell_example.png)
 ### Heat map inference
 Other inference method prepared is generating a heat map. Detection is performed multiple times on a single crop at different rotations and then normalized. Heat map can ensure that only cells that yield multiple results are visible.
 The results are 3 heat map images for apoptosis cells, necroptosis cells and background. Each heat map is in range of <0.0,1.0>.
+![example3](docs/heatmap_example.png)
 ### Comparison
 There is one additional file *yolo_inference_comparison.ipynb* for comparing both methods of inference side by side.
+![example4](docs/apoptosis_2.png)
 ### CellDetector
 Class to wrap trained YOLOv8 cell detection model. CellDetector provide functions to do inference, and visualization.
 Inference can be performed on a single image in desired size or on a larger whole microscope image with croping it into samller images. 
