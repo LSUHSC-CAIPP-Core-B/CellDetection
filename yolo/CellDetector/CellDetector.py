@@ -53,7 +53,7 @@ class CellDetector:
         results = self.process_results(results)
         return results
 
-    def predict_with_crop(self, big_image, conf, iou, device, withOverlap = False, withImage = False):
+    def predict_with_crop(self, big_image, conf, iou, device = None, withOverlap = False, withImage = False):
         """
         Predict boxes if died cells on a single image. Predictions are made on a smaller cropped images from the original
         and then scaled to the original image.
@@ -63,8 +63,8 @@ class CellDetector:
         iou (float): IoU threshold for predictions
         device (str): device argument to pass to yolo predict function to choose which device (CPU/GPU) use for inference.
         for simple GPU usage use "device=0"
-        withOverlap (bool): If cropping should be with overlap or not
-        withImage (bool): If should return processed image
+        withOverlap (bool): if cropping should be with overlap or not
+        withImage (bool): if should return processed image
 
         return: list of predicted boxes with classes (optionaly processed iamge)
         """
@@ -94,94 +94,86 @@ class CellDetector:
         else:
             return results_all
 
-    def predict_with_heatmap(self, big_image, conf, iou, device, desired_coverage = 100, withImage = False, randomCrop = True):
+    def predict_with_heatmap(self, big_image, conf, iou, device = None, desired_coverage = 100, withImage = False, withResults = False):
         """
-        Predict boxes if died cells on a single image. Predictions are made on a smaller random cropped images from the original
-        and then scaled to the original image. All the predictions are then converted to a heat map.
+        Predict boxes of died cells on a single image. Predictions are made on a smaller random cropped images from the original.
+        All the predictions are then converted to a heat map.
 
         big_image (np.array): image to predict
         conf (float): confidence threshold for predictions
         iou (float): IoU threshold for predictions
         device (str): device argument to pass to yolo predict function to choose which device (CPU/GPU) use for inference.
         for simple GPU usage use "device=0"
-        desired_coverage (int): Number of times to cover each pixel
-        withImage (bool): If should return processed image
-        randomCrop (bool): If cropping should be random or not
+        desired_coverage (int): number of times to cover each pixel
+        withImage (bool): if should return processed image
+        withResults (bool): if should return list of result boxes
 
-        return: list of predicted boxes with classes (optionaly big_image and total coverage of each pixel)
+        return: heat map image (optionaly big_image and or list of results)
         """ 
-
         big_image = self.prepare_image_to_crop_heatmap(big_image)
-        # Calculate the number of crops needed
         big_image_h, big_image_w = big_image.shape[:2]
 
-        # prepare needed vars 
-        if randomCrop:
-            print("Random Croping")
-            total_crops = big_image_w * big_image_h * desired_coverage // (self.IMAGE_SIZE * self.IMAGE_SIZE)
-            print("Total random crops to execute: " + str(total_crops))
-        else:
-            print("Shift cropping")
-            shift = math.floor(128/math.sqrt(desired_coverage))
-            width_shift = shift
-            height_shift = shift
-            num_width_windows = math.floor(big_image_w/width_shift)
-            num_height_windows = math.floor(big_image_h/height_shift)
-            total_crops = num_width_windows * num_height_windows
-            total_coverage = math.floor(math.sqrt(desired_coverage)) * math.floor(math.sqrt(desired_coverage))
-            print("Total crops to execute: " + str(total_crops))
-            print("Total coverage of each pixel: " + str(total_coverage))
+        # prepare needed vars and calculate the number of crops needed
+        print("Random Croping")
+        total_crops = big_image_w * big_image_h * desired_coverage // (self.IMAGE_SIZE * self.IMAGE_SIZE)
+        print("Total random crops to execute: " + str(total_crops))
 
-        results_all = []
-        # different cropping paths
-        # RANDOM
-        if randomCrop:
-            for _ in range(total_crops):
-                img_crop_read, top, left = random_crop(big_image, self.IMAGE_SIZE)
-                for rotation in [cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_180, cv2.ROTATE_90_COUNTERCLOCKWISE, 3]:
-                    if rotation != 3:
-                        img_crop_base = img_crop_read.copy()
-                        img_crop = cv2.rotate(img_crop_base, rotation)
-                    else:
-                        img_crop = img_crop_read.copy()
-                    results = self.predict(img_crop, conf, iou, device)
-                    print(results)
-                    results = self.rotate_results(results, rotation)
-                    print(results)
-                    results = self.scale_crop_results(results, left, top)
-                    for result in results:
+        # heat map images
+        apoptosis_image = np.zeros((big_image_h, big_image_w), dtype=np.int16)
+        necroptosis_image = np.zeros((big_image_h, big_image_w), dtype=np.int16)
+        background_image = np.zeros((big_image_h, big_image_w), dtype=np.int16)
+
+        if withResults:
+            results_all = []
+
+        for _ in range(total_crops):
+            img_crop_read, top, left = random_crop(big_image, self.IMAGE_SIZE)
+            for rotation in [cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_180, cv2.ROTATE_90_COUNTERCLOCKWISE, 3]:
+                if rotation != 3:
+                    img_crop_base = img_crop_read.copy()
+                    img_crop = cv2.rotate(img_crop_base, rotation)
+                else:
+                    img_crop = img_crop_read.copy()
+
+                results = self.predict(img_crop, conf, iou, device)
+                results = self.rotate_results(results, rotation)
+
+                if withResults:
+                    results_scaled = self.scale_crop_results(results, left, top)
+                    for result in results_scaled:
                         results_all.append(result)
-        # SHIFT
-        else:
-            for width_window in range(int(num_width_windows)):
-                for height_window in range(int(num_height_windows)):
-                    left = width_window * width_shift
-                    top = height_window * height_shift
-                    img_crop_read = big_image[top:top + self.CROP_HEIGHT, left:left + self.CROP_WIDTH]
-                    for rotation in [cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_180, cv2.ROTATE_90_COUNTERCLOCKWISE, 3]:
-                        if rotation != 3:
-                            img_crop_base = img_crop_read.copy()
-                            img_crop = cv2.rotate(img_crop_base, rotation)
-                        else:
-                            img_crop = img_crop_read.copy()
-                        results = self.predict(img_crop, 0.2, 0.4)
-                        print(results)
-                        results = self.rotate_results(results, rotation)
-                        print(results)
-                        results = self.scale_crop_results(results, left, top)
-                        for result in results:
-                            results_all.append(result)
 
-        if withImage:
-            if randomCrop:
-                return results_all, big_image
+                apoptosis_crop = np.zeros((self.IMAGE_SIZE, self.IMAGE_SIZE), dtype=np.int16)
+                necroptosis_crop = np.zeros((self.IMAGE_SIZE, self.IMAGE_SIZE), dtype=np.int16)
+                background_crop = np.ones((self.IMAGE_SIZE, self.IMAGE_SIZE), dtype=np.int16)
+
+                apoptosis_crop, necroptosis_crop, background_crop = self.gen_masks(apoptosis_crop, necroptosis_crop, background_crop, results)
+
+                apoptosis_image[top:top + self.IMAGE_SIZE, left:left + self.IMAGE_SIZE] += apoptosis_crop
+                necroptosis_image[top:top + self.IMAGE_SIZE, left:left + self.IMAGE_SIZE] += necroptosis_crop
+                background_image[top:top + self.IMAGE_SIZE, left:left + self.IMAGE_SIZE] += background_crop
+        
+        apoptosis_image = apoptosis_image.astype(np.float16)
+        necroptosis_image = necroptosis_image.astype(np.float16)
+        background_image = background_image.astype(np.float16)
+
+        sum_image = apoptosis_image + necroptosis_image + background_image
+        sum_image[sum_image < 1.0] = 1.0
+
+        apoptosis_image = apoptosis_image/sum_image
+        necroptosis_image = necroptosis_image/sum_image
+        background_image = background_image/sum_image
+
+        if withResults:
+            if withImage:
+                return apoptosis_image, necroptosis_image, background_image, big_image, results_all
             else:
-                return results_all, big_image, total_coverage
+                return apoptosis_image, necroptosis_image, background_image, results_all
         else:
-            if randomCrop:
-                return results_all
+            if withImage:
+                return apoptosis_image, necroptosis_image, background_image, big_image
             else:
-                return results_all, total_coverage
+                return apoptosis_image, necroptosis_image, background_image
 
 # |----------------------RESULT PROCESSING--------------------------------------------|
 
@@ -258,6 +250,16 @@ class CellDetector:
             results_list.append([top_r, left_r, bottom_r, right_r, result[4]])
 
         return results_list
+
+    def gen_masks(self, apoptosis_image, necroptosis_image, background_image, results):
+        for t, l ,b, r, r_cls in results:
+            background_image[t:b, l:r] = 0
+            # add values to the predicted pixels based on class
+            if r_cls == 0:  # A Apoptosis
+                apoptosis_image[t:b, l:r] +=1 
+            elif r_cls == 1:  # Necroptosis
+                necroptosis_image[t:b, l:r] +=1
+        return apoptosis_image, necroptosis_image, background_image
 
 # |----------------------PREPROCESSING--------------------------------------------|
 
@@ -363,34 +365,3 @@ class CellDetector:
             return image, image_green_crop_3channel
         else:
             return image
-
-    def gen_heatmap_mask(self, image, results, total_coverage):
-        """
-        Generate heat map based on provided results in the shape of provided image
-
-        image (np.array): image to add boxes to
-        results (list(list)): list of predicted boxes to add to the image
-        total_coverage (int): number of times each pixel was covered, for normalization purposes
-
-        return: heat map image
-        """
-        image_h, image_w = image.shape[:2]
-        base_image = np.zeros((image_h, image_w), dtype=np.int16)
-        for result in results:
-            t = result[0]
-            l = result[1]
-            b = result[2]
-            r = result[3]
-            r_cls = result[4]
-
-            # add values to the predicted pixels based on class
-            if r_cls == 0:
-                base_image[t:b, l:r] +=1 
-            elif r_cls == 1:
-                base_image[t:b, l:r] -=1
-
-        # normalize to (-1,1)
-        base_image = base_image.astype(np.float16)
-        base_image = (2*(base_image-(-total_coverage))/(total_coverage-(-total_coverage))) - 1
-
-        return base_image
