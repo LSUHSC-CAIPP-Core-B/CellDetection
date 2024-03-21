@@ -16,6 +16,21 @@ The output of the training will be saved in the *runs* folder but additional sam
 This file has examples on how to use the YOLO package for simple training and get mterics from training output as well as perform inference.
 ### Script version
 This training Python script was mainly used for training and is a minimal example of setting the training up.
+### Directory Structure
+YOLO requires that the data be structured in a certain way. Here is the example Directory tree:    
+```
+DatasetDir/
+├─ class1/
+│  ├─ images/
+│  │  ├─ train/
+│  │  ├─ val/
+│  │  ├─ test/
+│  ├─ labels/
+│  │  ├─ train/
+│  │  ├─ val/
+│  │  ├─ test/
+├─ class2/
+```
 ## Inference
 ### Base inference
 To test the model on an image file *yolo_inference_test.ipynb* was made. The notebook performes prediction on a given image and can display the results. The inference is made on cropped images of the  original image provided to suit the model requirements and then our custom wrapper takes care of the result predictions format for visualization purposes. The visualization can be done with additional microscopic image of staining.  
