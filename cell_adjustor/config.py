@@ -16,7 +16,7 @@ PREPROCESS_VALS = 3
 # 10 - Apoptosis MEF pt2
 # 11 Apoptosis MEF test
 # 12 Necroptosis MEF test
-DATASET = 101
+DATASET = 99
 
 # INITIAL VARS
 if PREPROCESS_VALS == 0:
@@ -122,9 +122,23 @@ elif DATASET == 12:
     CELL_TYPE = "MEF"
     DEATH_TYPE = "Necroptosis"
     IMAGES_PATH = "../test_images/Necroptosis/"
+    
+elif DATASET == 99:
+    # 12 Necroptosis MEF test
+    CELL_TYPE = "HT29"
+    DEATH_TYPE = "Apoptosis"
+    IMAGES_PATH = '/home/cc2/Documents/CellDetection/Test Data/Apoptosis/'
+    
+elif DATASET == 98:
+    # 12 Necroptosis MEF test
+    CELL_TYPE = "HT29"
+    DEATH_TYPE = "Necroptosis"
+    IMAGES_PATH = '/home/cc2/Documents/CellDetection/Test Data/Necroptosis/'
+    
+
 
 # DATASET PATHS
 GREEN_PATH = IMAGES_PATH + CELL_TYPE + "_Green/"
-PHASE_PATH = IMAGES_PATH + CELL_TYPE + "_phase/"
+PHASE_PATH = IMAGES_PATH + CELL_TYPE + "_Phase/"
 CROP_PHASE_PATH = IMAGES_PATH + CELL_TYPE + "_Crop_phase/"
 CROP_GREEN_PATH = IMAGES_PATH + CELL_TYPE + "_Crop_green/"

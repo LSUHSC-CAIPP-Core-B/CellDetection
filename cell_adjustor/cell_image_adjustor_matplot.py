@@ -8,6 +8,7 @@ from matplotlib.widgets import Slider, Button, TextBox, RadioButtons
 from config import *
 from CellProcessor import read_image, process_image, draw_contours
 
+# Comment this paths if not to use cropped images paths
 GREEN_PATH = CROP_GREEN_PATH
 PHASE_PATH = CROP_PHASE_PATH
 

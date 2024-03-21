@@ -1,9 +1,8 @@
-path: '/Users/sapplab/Desktop/CellDataProcessing'
-train: 'MEF1/MEF1_split/images/train'
-val: 'MEF1/MEF1_split/images/val'
-test: 'MEF1/MEF1_split/images/test'
+path: '/home/cc2/Documents/CellDetection/Test Data/Apoptosis/DATA/Apoptosis'
+train: 'images/train'
+val: 'images/val'
 
 nc: 1
 
 names:
-  0: 'cell_n'
+  0: 'apoptosis'
