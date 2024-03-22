@@ -37,7 +37,8 @@ To test the model on an image file *yolo_inference_test.ipynb* was made. The not
 ![example2](../docs/cell_example.png)
 ### Heat map inference
 Other inference method prepared is generating a heat map. Detection is performed multiple times on a single crop at different rotations and then normalized. Heat map can ensure that only cells that yield multiple results are visible.
-The results are 3 heat map images for apoptosis cells, necroptosis cells and background. Each heat map is in range of <0.0,1.0>.
+The results are 3 heat map images for apoptosis cells, necroptosis cells and background.     
+Each heat map is in range from 0.0 to 1.0.     
 ![example3](../docs/heatmap_example.png)
 ### Comparison
 There is one additional file *yolo_inference_comparison.ipynb* for comparing both methods of inference side by side.
